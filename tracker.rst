@@ -11,10 +11,12 @@ Functions
  - allow definition of metadata for entries
  - allow appending/modifing of entries
  - allow quering for entries matching certain criterias like
-  - metadata
-  - id's
-  - content fragments
-  - ...
+
+  * metadata
+  * id's
+  * content fragments
+  * ...
+
  - define unique id's for entries, users and repositories
  - ...
  
