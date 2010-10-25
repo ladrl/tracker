@@ -21,6 +21,7 @@ trait Content {
 	def modifiedAt: Option[Date]
 	def createdBy: User
 	def modifiedBy: Option[User]
+	def toString: String
 }
 
 trait State extends UniqueNamed {
@@ -73,6 +74,13 @@ trait UniqueNaming {
 	private var incrementingFormats = scala.collection.mutable.Map[String, Int]()
 }
 
+object Tracker {
+	import impl._
+	val Simple = """Simple(.+)""".r
+	def create(name: String):Tracker = name match {
+		case Simple(name) => new SimpleTracker(name)
+	}
+}
 
 package impl {
 	
