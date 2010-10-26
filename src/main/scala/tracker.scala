@@ -47,8 +47,6 @@ trait TrackerEntry extends UniqueNamed {
 }
 
 trait Tracker extends UniqueNamed {
-	def backup(to: URL)
-	
 	def create(): TrackerEntry
 	def update(what: TrackerEntry): TrackerEntry
 	def remove(what: TrackerEntry): Boolean
@@ -75,8 +73,8 @@ trait UniqueNaming {
 }
 
 object Tracker {
-	import impl._
-	val Simple = """Simple(.+)""".r
+	import impl.simple._
+	val Simple = """Simple (.+)""".r
 	def create(name: String):Tracker = name match {
 		case Simple(name) => new SimpleTracker(name)
 	}
@@ -84,96 +82,128 @@ object Tracker {
 
 package impl {
 	
-	class SimpleUser(val name: String) extends User {
-		def uniqueId = new URI("user_%s" format (name.filter(_ != ' ')))
-	}
-	
-	case class SimpleContent(text: String, 
-		val createdBy: User, val createdAt: Date = new Date(), 
-		val modifiedBy: Option[User] = None, val modifiedAt: Option[Date] = None) extends Content {
-		override def toString = text
-	}
-	
-	case class SimpleEntry(
-		val name: String, 
-		val entryContent: List[Content] = Nil, 
-		val entryNamedContent: TrackerEntry#NamedContent = Map(),
-		private val entryState: State = SimpleStates.Open
-		) extends TrackerEntry {
-			
-		def uniqueId = new URI("entry_%s" format (name.filter(_ != ' ')))
-
-		def content: List[Content] = entryContent
-		def content_=(replaceWith: List[Content]) = copy(entryContent = replaceWith)
-
-		def namedContent: NamedContent = entryNamedContent
-		def namedContent_=(replaceWith: NamedContent) = copy(entryNamedContent = replaceWith)
-
-		def state: State = entryState
-
-		def state_=(newState: State): TrackerEntry = { 
-			if(state canTransitTo newState)
-				copy(entryState = newState)
-			else
-				copy()
-		}
+	package db {
+		import com.osinka.mongodb._
+		import com.osinka.mongodb.shape._
+		import com.mongodb._
 		
-	}
-	
-	trait SimpleState extends State {
-		def uniqueId = new URI(name)
-	}
-	
-	object SimpleStates {
-		object Open extends SimpleState {
-			val name = "Open"
-			val transits: Transit = {
-				case Closed => ()
+		class DB_Tracker (val name: String) extends Tracker with UniqueNaming  {
+		
+			val dbName = "db_%s.trk" format name
+
+			val uniqueId = new URI(dbName)
+
+			def create(): TrackerEntry = {
+
+				null
 			}
-		}
 
-		object Closed extends SimpleState {
-			val name = "Closed"
-			val transits: Transit = {
-				case Open => ()
+			def update(what: TrackerEntry) : TrackerEntry = {
+				what
 			}
-		}
-		
-		object Unreachable extends SimpleState {
-			val name = "Unreachable"
-			val transits: Transit = {
-				case _ => ()
-			}
-		}
-	}
-	
-	import scala.util.logging._
-	class SimpleTracker(val name: String) extends Tracker with UniqueNaming with Logged with ConsoleLogger {
-		var entries = Map[String, TrackerEntry]()
-		val uniqueId =  new URI("tracker_%s" format (name.filter{_ != ' '}))
-		def create(): TrackerEntry = {
-			val newEntry = new SimpleEntry(incrementing("entry#%i").toString, Nil, Map(), SimpleStates.Open)
-			entries += (newEntry.name -> newEntry)
-			newEntry
-		}
-		def update(what: TrackerEntry) = {
-			if(! entries.contains(what.name)) error("Trying to update an unknown entry")
-			entries += what.name -> what
-			entries(what.name)
-		}
-		
-		
-		def query(predicate: (TrackerEntry) => Boolean) = (entries map { _._2 }filter predicate).toSet.toList
-		
-		def backup(to: URL) { }
-		def remove(what: TrackerEntry) = {
-			if(entries contains what.name)
-			{
-				entries = entries.filterKeys { _ != what.name }
-				true
-			}
-			else
+
+			def remove(what: TrackerEntry) : Boolean = {
 				false
+			}
+
+			def query(predicate: TrackerEntry => Boolean): List[TrackerEntry] = {
+				Nil
+			}
 		}
+	}
+
+	package simple {
+		class SimpleUser(val name: String) extends User {
+			def uniqueId = new URI("user_%s" format (name.filter(_ != ' ')))
+		}
+
+		case class SimpleContent(text: String, 
+			val createdBy: User, val createdAt: Date = new Date(), 
+			val modifiedBy: Option[User] = None, val modifiedAt: Option[Date] = None) extends Content {
+				override def toString = text
+			}
+
+			case class SimpleEntry(
+				val name: String, 
+				val entryContent: List[Content] = Nil, 
+				val entryNamedContent: TrackerEntry#NamedContent = Map(),
+				private val entryState: State = SimpleStates.Open
+				) extends TrackerEntry {
+
+					def uniqueId = new URI("entry_%s" format (name.filter(_ != ' ')))
+
+					def content: List[Content] = entryContent
+					def content_=(replaceWith: List[Content]) = copy(entryContent = replaceWith)
+
+					def namedContent: NamedContent = entryNamedContent
+					def namedContent_=(replaceWith: NamedContent) = copy(entryNamedContent = replaceWith)
+
+					def state: State = entryState
+
+					def state_=(newState: State): TrackerEntry = { 
+						if(state canTransitTo newState)
+						copy(entryState = newState)
+						else
+						copy()
+					}
+
+				}
+
+				trait SimpleState extends State {
+					def uniqueId = new URI(name)
+				}
+
+				object SimpleStates {
+					object Open extends SimpleState {
+						val name = "Open"
+						val transits: Transit = {
+							case Closed => ()
+						}
+					}
+
+					object Closed extends SimpleState {
+						val name = "Closed"
+						val transits: Transit = {
+							case Open => ()
+						}
+					}
+
+					object Unreachable extends SimpleState {
+						val name = "Unreachable"
+						val transits: Transit = {
+							case _ => ()
+						}
+					}
+				}
+
+				abstract class AbstractSimpleTracker(val name: String, var entries: Map[String, TrackerEntry], val uniqueId: URI)  extends Tracker with UniqueNaming {
+					def create(): TrackerEntry = {
+						val newEntry = new SimpleEntry(incrementing("entry#%i").toString, Nil, Map(), SimpleStates.Open)
+						entries += (newEntry.name -> newEntry)
+						newEntry
+					}
+
+					def update(what: TrackerEntry) = {
+						if(! entries.contains(what.name)) error("Trying to update an unknown entry")
+						entries += what.name -> what
+						entries(what.name)
+					}
+
+					def query(predicate: (TrackerEntry) => Boolean) = (entries map { _._2 }filter predicate).toSet.toList
+
+					def backup(to: URL) { }
+
+					def remove(what: TrackerEntry) = {
+						if(entries contains what.name)
+						{
+							entries = entries.filterKeys { _ != what.name }
+							true
+						}
+						else
+						false
+					}	
+				}
+
+				class SimpleTracker(name: String) extends AbstractSimpleTracker(name, Map(), new URI("tracker_%s" format (name.filter{_ != ' '})))
 	}
 }

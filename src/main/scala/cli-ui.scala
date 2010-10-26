@@ -15,7 +15,7 @@ object TrackerCLI {
     def main(args: Array[String]) {
         // look at the first argument 
         try {
-            val tracker = Tracker.create("SimpleTest")
+            val tracker = Tracker.create("DB Test.trk")
             if(args.size < 1)
                 error("needs args")
             

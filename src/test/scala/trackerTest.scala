@@ -6,7 +6,7 @@ import org.scalatest.matchers.MustMatchers
 import java.net.URI
 
 class TrackerTest extends WordSpec with MustMatchers {
-	val user = new impl.SimpleUser("lukas")
+	val user = new impl.simple.SimpleUser("lukas")
 	"A unique name" should {
 		"create an incrementing URI" in {
 			val naming = new UniqueNaming {}
@@ -17,7 +17,7 @@ class TrackerTest extends WordSpec with MustMatchers {
 	}
 	
 	"A tracker" should {
-		import impl._
+		import impl.simple._
 		
 		val tracker = new SimpleTracker("TestTracker")
 		"create an entry" in {
@@ -84,7 +84,7 @@ class TrackerTest extends WordSpec with MustMatchers {
 	}
 	
 	"An entry" should {
-		import impl._
+		import impl.simple._
 		val entry = new SimpleEntry(name = "test", entryContent = Nil, entryNamedContent = Map(), entryState = SimpleStates.Open)
 
 		"add content" in {
