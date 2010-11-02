@@ -28,10 +28,10 @@ class TrackerTest extends WordSpec with MustMatchers {
 		"update an entry" in {
 			val entry = tracker create
 			
-			val modEntry = entry append SimpleContent("test content", user)
+			entry.content ++= (SimpleContent("test content", user) :: Nil)
 			
-			tracker update modEntry
-			(tracker queryName entry.name) must be (List(modEntry))
+			tracker update entry
+			(tracker queryName entry.name) must be (List(entry))
 		}
 		"remove an entry" in {
 			val entry = tracker create
@@ -89,22 +89,21 @@ class TrackerTest extends WordSpec with MustMatchers {
 
 		"add content" in {
 			val testContent = new SimpleContent("test content", user) :: Nil
-			val newEntry = entry.content ++= testContent
-			newEntry.content must be (testContent)
+			entry.content ++= testContent
+			entry.content must be (testContent)
 		}
 		"add metadata" in {
 			val newMetaData = "Name" -> new SimpleContent("test meta data", user)
-			val newEntry = entry.namedContent += newMetaData
-			newEntry.namedContent("Name") must be (newMetaData._2)
+			entry.meta += newMetaData
+			entry.meta("Name") must be (newMetaData._2)
 		}
 		"allow valid state changes" in {
-			val newEntry = entry.state = SimpleStates.Closed
-			newEntry.state must be (SimpleStates.Closed)
+			entry.state = SimpleStates.Closed
+			entry.state must be (SimpleStates.Closed)
 		}
 		"disallow invalid state changes" in {
-			val newEntry = entry.state = SimpleStates.Unreachable
-			newEntry.state must be (SimpleStates.Open)
-			
+			entry.state = SimpleStates.Unreachable
+			entry.state must be (SimpleStates.Open)
 		}
 	}
 }

@@ -4,7 +4,7 @@ import scalatoys.tracker._
 //import org.apache.commons.cli._
 
 object TrackerCLI {
-    def formatEntry(entry: TrackerEntry) = {
+    def formatEntry(entry: Entry) = {
         val header = "%s - %s" format (entry name, entry.state.name)
         
         val content = entry.content.foldLeft(""){ _ + "\n" + _ }
