@@ -3,107 +3,48 @@ package scalatoys.tracker
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 
-import java.net.URI
+
+case class DuplicateBook(
+		book: Book, 
+		additionalPages: List[Page] = Nil, 
+		additionalHeadlines: Map[String, HeadLine] = Map(), 
+		subtractionalHeadlines: List[String] = Nil) extends CopierCommand {
+	def write(page: Page) = copy(additionalPages = additionalPages ++ (page :: Nil))
+	def write(lines: Map[String, HeadLine]) = copy(additionalHeadlines =  additionalHeadlines/*+ lines  FIXME: create a union from two maps */)
+	def erase(lines: List[String]) = copy(subtractionalHeadlines = subtractionalHeadlines ++ lines)
+	
+	def asNewBook: Book = {
+		new Book(
+			book.pages ++ additionalPages,
+			(book.frontPage /*union additionalHeadlines FIXME: dito */).filterKeys { !subtractionalHeadlines.contains(_) }
+		)
+	}
+}
+class CreateBook extends CopierCommand {
+	def write(page: Page) = DuplicateBook(asNewBook)
+	def write(lines: Map[String, HeadLine]) = DuplicateBook(asNewBook)
+	def erase(lines: List[String]) = DuplicateBook(asNewBook)
+	
+	def asNewBook = new Book(Nil, Map())
+}
 
 class TrackerTest extends WordSpec with MustMatchers {
-	val user = new impl.simple.SimpleUser("lukas")
-	"A unique name" should {
-		"create an incrementing URI" in {
-			val naming = new UniqueNaming {}
-			naming.incrementing("%i") must be (new URI("0"))
-			naming.incrementing("#%i") must be (new URI("#0"))
-			naming.incrementing("#%i") must be (new URI("#1"))
-		}
-	}
 	
-	"A tracker" should {
-		import impl.simple._
-		
-		val tracker = new SimpleTracker("TestTracker")
-		"create an entry" in {
-			val entry = tracker create
-			
-			entry must be (new SimpleEntry(name = "entry#0"))
-		}
-		"update an entry" in {
-			val entry = tracker create
-			
-			entry.content ++= (SimpleContent("test content", user) :: Nil)
-			
-			tracker update entry
-			(tracker queryName entry.name) must be (List(entry))
-		}
-		"remove an entry" in {
-			val entry = tracker create
-			
-			(tracker queryName entry.name) must be (List(entry))
-			
-			tracker remove entry
-			
-			(tracker queryName entry.name) must be (List())
-		}
-		
-		"try to update a non-existing entry" in {
-			val entry = tracker create
-			val non_existing = SimpleEntry("invalid")
-			
-			(tracker remove non_existing) must be (false)
-			
-			(tracker remove entry) must be (true)
-		}
-		
-		"get an entry" in {
-			val entry = tracker create
-			
-			(tracker queryName entry.name) must be (List(entry))
-		}
-		
-		"get no entry when quering for name ''" in {
-			val tracker = new SimpleTracker("TestTracker")
-			(0 until 10) foreach { i => tracker create }
-			
-			(tracker queryName("".r)) must be(List())
-		}
-		"get all entries when quering for name .*" in {
-			val tracker = new SimpleTracker("TestTracker")
-			(0 until 10) foreach { i =>  tracker create }
-			
-			(tracker queryName(""".*""".r) sortWith { (e1, e2) => e1.name < e2.name }) must be(
-				(
-					((0 until 10).map{i => SimpleEntry("entry#%d" format i, Nil, Map(), SimpleStates.Open)}.toList).sortWith { (e1, e2) => e1.name < e2.name }
-				)
-			)
-		}
-		"""get a subset of all entries with name entry#\d""" in {
-			val tracker = new SimpleTracker("TestTracker")
-			(0 until 20) foreach { i =>  tracker create }
-			(tracker queryName("""entry#\d""".r) sortWith { (e1, e2) => e1.name < e2.name}) must be(
-				((0 until 10).map{i => SimpleEntry("entry#%d" format i, Nil, Map(), SimpleStates.Open)}.toList).sortWith { (e1, e2) => e1.name < e2.name }	
-			) 
-		}
-	}
-	
-	"An entry" should {
-		import impl.simple._
-		val entry = new SimpleEntry(name = "test", entryContent = Nil, entryNamedContent = Map(), entryState = SimpleStates.Open)
+	"A copier" must {
 
-		"add content" in {
-			val testContent = new SimpleContent("test content", user) :: Nil
-			entry.content ++= testContent
-			entry.content must be (testContent)
+		
+		val copier = new Copier {
+			val command = new CreateBook
+			def from[T <% Book](template: T): CopierCommand = {
+				new DuplicateBook(template)
+			}
 		}
-		"add metadata" in {
-			val newMetaData = "Name" -> new SimpleContent("test meta data", user)
-			entry.meta += newMetaData
-			entry.meta("Name") must be (newMetaData._2)
+		"create a book" in {
+			(pending)
 		}
-		"allow valid state changes" in {
-			entry.state = SimpleStates.Closed
-			entry.state must be (SimpleStates.Closed)
-		}
-		"disallow invalid state changes" in {
-			entry.state = SimpleStates.Unreachable
-			entry.state must be (SimpleStates.Open)
+		
+		"copy a book and put a page in it" in {
+			(pending)
 		}
 	}
 }
