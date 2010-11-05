@@ -3,6 +3,7 @@ package scalatoys.tracker
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 
+import java.util.Date
 
 case class DuplicateBook(
 		book: Book, 
@@ -10,41 +11,65 @@ case class DuplicateBook(
 		additionalHeadlines: Map[String, HeadLine] = Map(), 
 		subtractionalHeadlines: List[String] = Nil) extends CopierCommand {
 	def write(page: Page) = copy(additionalPages = additionalPages ++ (page :: Nil))
-	def write(lines: Map[String, HeadLine]) = copy(additionalHeadlines =  additionalHeadlines/*+ lines  FIXME: create a union from two maps */)
+	def write(line: (String, HeadLine)) = copy(additionalHeadlines = additionalHeadlines + line)
+	def write(lines: Map[String, HeadLine]) = copy(additionalHeadlines =  additionalHeadlines ++ lines)
+	def erase(line: String) = copy(subtractionalHeadlines = subtractionalHeadlines :+ line)
 	def erase(lines: List[String]) = copy(subtractionalHeadlines = subtractionalHeadlines ++ lines)
 	
-	def asNewBook: Book = {
-		new Book(
+	def asNewBook: Book = SimpleBook(
 			book.pages ++ additionalPages,
-			(book.frontPage /*union additionalHeadlines FIXME: dito */).filterKeys { !subtractionalHeadlines.contains(_) }
+			(book.frontPage ++ additionalHeadlines).filterKeys { !subtractionalHeadlines.contains(_) }
 		)
-	}
 }
-class CreateBook extends CopierCommand {
-	def write(page: Page) = DuplicateBook(asNewBook)
-	def write(lines: Map[String, HeadLine]) = DuplicateBook(asNewBook)
-	def erase(lines: List[String]) = DuplicateBook(asNewBook)
-	
-	def asNewBook = new Book(Nil, Map())
+
+object EmptyBook extends Book {
+	override val pages = Nil
+	override val frontPage = Map[String, HeadLine]()
+}
+case class SimpleBook(val pages: List[Page], val frontPage: Map[String, HeadLine]) extends Book
+
+case class SimpleHeadLine(implicit val createdBy: User, val createdAt: Date = new java.util.Date) extends HeadLine
+
+case class SimplePage(implicit val createdBy: User,  val createdAt: Date = new java.util.Date) extends Page
+
+class SimpleCopier(val book: Book = EmptyBook, val command: Option[CopierCommand] = None) extends Copier {
+	def from(template: Book) = new SimpleCopier(template, Some(DuplicateBook(template)))
 }
 
 class TrackerTest extends WordSpec with MustMatchers {
 	
 	"A copier" must {
-
-		
-		val copier = new Copier {
-			val command = new CreateBook
-			def from[T <% Book](template: T): CopierCommand = {
-				new DuplicateBook(template)
-			}
-		}
+		implicit val me = User("me")
+			
+		val copier: Copier = new SimpleCopier
 		"create a book" in {
-			(pending)
+			copier.from(EmptyBook).by({ x => x }) must be (SimpleBook(Nil, Map()))
 		}
 		
-		"copy a book and put a page in it" in {
-			(pending)
+		"put a page in a book it" in {
+			copier.from(EmptyBook).by { _ write new SimplePage() } must be (new SimpleBook(new SimplePage :: Nil, Map()))
 		}
+		
+		"put a headline on a book" in {
+			copier from EmptyBook by { _ write "Title" -> SimpleHeadLine() } must be (SimpleBook(Nil, Map("Title" -> SimpleHeadLine())))
+		}
+		
+		"remove a headline from a book" in {
+			val book = SimpleBook(Nil, Map("Title" -> SimpleHeadLine()))
+			copier from book by { _ erase "Title" } must be (SimpleBook(Nil, Map()))
+		}
+	}
+	
+	"A library" must {
+		"accept a book" in { (pending) }
+		"return a book" in { (pending) }
+		"accept two adjacent versions of the same book" in { (pending) }
+	}
+	
+	"A catalog" must {
+		"allow to find a list of books by HeadLine" in { (pending) }
+		"allow to find a list of books by Page" in { (pending) }
+		"allow to find a list of books by User" in { (pending) }
+		"allow to find the list of a book and it`s predecessors" in { (pending) }
 	}
 }

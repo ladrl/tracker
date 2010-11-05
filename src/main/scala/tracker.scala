@@ -12,8 +12,7 @@ import java.util.Date
 	Someone has to do stuff.
 */
 
-trait User {
-}
+case class User(val name: String)
 
 // Tagebuchseite
 trait Page {
@@ -28,17 +27,22 @@ trait HeadLine {
 }
 
 // Tagebuch eines "Bugs" :-)
-case class Book(val pages: List[Page], val frontPage: Map[String, HeadLine])
+trait Book {
+	def pages: List[Page]
+	def frontPage: Map[String, HeadLine]
+}
+
 
 // val copy = new Copier ...
 // val book = someBook
-// val newBook = copy from someBook by { _ write new Page write "Title" -> "New Title" }
+// val newBook = copy from someBook by { _ write new Page write "Title" -> "New Title" } 
 trait Copier {
-	protected def command: CopierCommand
+	protected def book: Book
+	protected def command: Option[CopierCommand]
 	
-	def from[T <% Book](template: T): CopierCommand
+	def from(template: Book): Copier
 	
-	def by(doing: CopierCommand => CopierCommand): Book = doing(command).asNewBook
+	def by(doing: CopierCommand => CopierCommand): Book = doing(command get).asNewBook
 }
 
 trait CopierCommand {
@@ -47,7 +51,9 @@ trait CopierCommand {
 	// Metaphor: To do this, you put a book on the copier, then instruct the copier to add a page and to add a line, then press 'copy' which creates the new book
 	// copier from book write page write page2 write "Title" -> "Mein Tagebuch" asNewBook
 	def write(page: Page): CopierCommand
+	def write(line: (String, HeadLine)): CopierCommand
 	def write(lines: Map[String, HeadLine]): CopierCommand
+	def erase(line: String): CopierCommand
 	def erase(lines: List[String]): CopierCommand
 	
 	def asNewBook: Book
