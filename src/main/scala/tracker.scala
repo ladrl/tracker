@@ -14,19 +14,20 @@ import java.util.Date
 
 case class User(val name: String)
 
-// Tagebuchseite
 trait Page {
+	// Fixme: Content should be flexible!
+	def content: String
 	def createdBy: User
 	def createdAt: Date
 }
 
-// Eintrag auf der Frontseite
 trait HeadLine {
+	// Fixme: Content should be flexible!
+	def content: String
 	def createdBy: User
 	def createdAt: Date
 }
 
-// Tagebuch eines "Bugs" :-)
 trait Book {
 	def pages: List[Page]
 	def frontPage: Map[String, HeadLine]
@@ -59,16 +60,17 @@ trait CopierCommand {
 	def asNewBook: Book
 }
 
-// Tagebuchbibliothek
 trait Library {
 	def place(book: Book): Library
-	def replaceBook(replace: Book, by: Book): Library
+	def replaceBook(replace: Book, by: Book): Library = removeBook(replace).place(by)
 	def removeBook(book: Book): Library
+	def catalogue: Catalogue
 }
 
-trait Cataloge
+trait Catalogue
 {
 	def query(predicate: Book => Boolean): List[Book]
+	def query[Q](query: Q): Seq[Book] = { Nil }
 }
 
 // Immutable Library, Book & Page
