@@ -35,6 +35,13 @@ package simple {
 		def from(template: Book) = new SimpleCopier(template, Some(DuplicateBook(template)))
 	}
 	
+	case class SimpleCatalogue(val toQuery: SimpleLibrary) extends Catalogue {
+		def query(predicate: Book => Boolean): List[Book] = {
+			for(book <- toQuery.books if predicate(book))
+				yield book
+		}
+	}
+	
 	case class SimpleLibrary(val books: List[Book]) extends Library {
 		def place(book: Book) = new SimpleLibrary(books :+ book)
 		def removeBook(book: Book) = {
@@ -42,7 +49,7 @@ package simple {
 			new SimpleLibrary(books filter { _ != book })
 		}
 		def replace(book: Book, by: Book) = removeBook(book).place(by)
-		def catalogue: Catalogue = new Catalogue { 	def query(predicate: Book => Boolean): List[Book] = Nil }
+		def catalogue: Catalogue = new SimpleCatalogue(this)
 
 		override def toString = "Library with Books %s" format(books.toString)
 	}
