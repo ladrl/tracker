@@ -2,8 +2,43 @@ package scalatoys.tracker.impl
 
 import scalatoys.tracker._
 import java.util.Date
-package simple {
 
+
+object EmptyBook extends Book {
+	override val pages = Nil
+	override val frontPage = Map[String, HeadLine]()
+}
+
+
+trait Factory {
+	def newPage(content: String, user: User): Page
+	def newHeadLine(content: String, user: User): HeadLine
+	def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]): Book
+	def newLibrary(content: Seq[Book]): Library
+	def newCopier(): Copier
+}
+
+object Factory {
+	def Page(content: String, user: User)(implicit factory: Factory)  = factory.newPage(content, user)
+	def HeadLine(content: String, user: User)(implicit factory: Factory)  = factory.newHeadLine(content, user)
+	def Book(pages: Seq[Page], frontPage: Map[String, HeadLine])(implicit factory: Factory)  = factory.newBook(pages, frontPage)
+	def Library(content: Seq[Book])(implicit factory: Factory)  = factory.newLibrary(content)
+	def Copier(implicit factory: Factory) = factory.newCopier()
+}
+
+
+package simple {
+	
+	object SimpleFactory extends Factory {
+		def newPage(content: String, user: User) = SimplePage(content, user)
+		def newHeadLine(content: String, user: User) = SimpleHeadLine(content, user)
+		def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]) = SimpleBook(pages.toList, frontPage)
+		def newLibrary(content: Seq[Book]) = SimpleLibrary(content.toList)
+		def newCopier() = new SimpleCopier()
+	}
+	
+	import Factory._
+	
 	case class DuplicateBook(
 		book: Book, 
 		additionalPages: List[Page] = Nil, 
@@ -20,11 +55,7 @@ package simple {
 				(book.frontPage ++ additionalHeadlines).filterKeys { !subtractionalHeadlines.contains(_) }
 				)
 			}
-
-	object EmptyBook extends Book {
-		override val pages = Nil
-		override val frontPage = Map[String, HeadLine]()
-	}
+			
 	case class SimpleBook(val pages: List[Page], val frontPage: Map[String, HeadLine]) extends Book
 
 	case class SimpleHeadLine(val content: String, implicit val createdBy: User, val createdAt: Date = new java.util.Date) extends HeadLine
