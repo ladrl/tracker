@@ -11,27 +11,76 @@ object EmptyBook extends Book {
 
 
 trait Factory {
-	def newPage(content: String, user: User): Page
-	def newHeadLine(content: String, user: User): HeadLine
+	def newPage(content: String, user: String): Page
+	def newHeadLine(content: String, user: String): HeadLine
 	def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]): Book
 	def newLibrary(content: Seq[Book]): Library
 	def newCopier(): Copier
 }
 
 object Factory {
-	def Page(content: String, user: User)(implicit factory: Factory)  = factory.newPage(content, user)
-	def HeadLine(content: String, user: User)(implicit factory: Factory)  = factory.newHeadLine(content, user)
+	def Page(content: String, user: String)(implicit factory: Factory)  = factory.newPage(content, user)
+	def HeadLine(content: String, user: String)(implicit factory: Factory)  = factory.newHeadLine(content, user)
 	def Book(pages: Seq[Page], frontPage: Map[String, HeadLine])(implicit factory: Factory)  = factory.newBook(pages, frontPage)
 	def Library(content: Seq[Book])(implicit factory: Factory)  = factory.newLibrary(content)
 	def Copier(implicit factory: Factory) = factory.newCopier()
 }
 
-
+/*
+package mongodb {
+	import com.mongodb._
+	import com.osinka.mongodb._
+	
+	object MongoFactory extends Factory {
+		def newPage(content: String, user: User) = new MongoPage(content, user)
+		def newHeadLine(content: String, user: User) = new MongoHeadLine(content, user)
+		def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]) = new MongoBook(pages.toList, frontPage)
+		def newLibrary(content: Seq[Book]) = new MongoLibrary(content.toList)
+		def newCopier() = MongoCopier
+	}
+	
+	class MongoPage(val content: String, user: User) extends Page with MongoObject
+	object MongoPage extends MongoObjectShape[MongoPage] {
+		lazy val content = Field.scalar("content", _.content)
+		lazy val user = Field.ref("createdBy", _.user)
+		val * = content :: user :: Nil
+		def factory(dbo: MongoObject) = 
+			for{
+				content <- Option(dbo)
+				user <- Option(dbo)
+				}
+				yield new MongoPage(content, user)
+	}
+	
+	class MongoHeadLine(val content: String, user: User) extends HeadLine with MongoObject
+	object MongoHeadLine extends MongoShape[MongoHeadLine] {
+		lazy val content = Field.scalar("content", _.content)
+		lazy val user = Field.ref("createdBy", _.user)
+		val * = content :: user :: Nil
+		def factory(dbo: MongoObject) = 
+			for{
+				content <- Option(dbo)
+				user <- Option(dbo)
+				}
+				yield new MongoHeadLine(content, user)
+	}
+	
+	class MongoBook(val pages: List[Page], val frontPage: Map[String, HeadLine]) extends Book with MongoObject
+	object MongoBook extends MongoShape[MongoBook] {
+	}
+	
+	class MongoLibrary(val books: List[Book]) extends Library with MongoObject
+	
+	object MongoCopier extends Copier {
+		
+	}
+}
+*/
 package simple {
 	
 	object SimpleFactory extends Factory {
-		def newPage(content: String, user: User) = SimplePage(content, user)
-		def newHeadLine(content: String, user: User) = SimpleHeadLine(content, user)
+		def newPage(content: String, user: String) = SimplePage(content, user)
+		def newHeadLine(content: String, user: String) = SimpleHeadLine(content, user)
 		def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]) = SimpleBook(pages.toList, frontPage)
 		def newLibrary(content: Seq[Book]) = SimpleLibrary(content.toList)
 		def newCopier() = new SimpleCopier()
@@ -58,9 +107,9 @@ package simple {
 			
 	case class SimpleBook(val pages: List[Page], val frontPage: Map[String, HeadLine]) extends Book
 
-	case class SimpleHeadLine(val content: String, implicit val createdBy: User, val createdAt: Date = new java.util.Date) extends HeadLine
+	case class SimpleHeadLine(val content: String, val createdBy: String, val createdAt: Date = new java.util.Date) extends HeadLine
 
-	case class SimplePage(val content: String, implicit val createdBy: User,  val createdAt: Date = new java.util.Date) extends Page
+	case class SimplePage(val content: String, val createdBy: String,  val createdAt: Date = new java.util.Date) extends Page
 
 	class SimpleCopier(val book: Book = EmptyBook, val command: Option[CopierCommand] = None) extends Copier {
 		def from(template: Book) = new SimpleCopier(template, Some(DuplicateBook(template)))

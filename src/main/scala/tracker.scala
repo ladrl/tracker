@@ -12,19 +12,17 @@ import java.util.Date
 	Someone has to do stuff.
 */
 
-case class User(val name: String)
-
 trait Page {
 	// Fixme: Content should be flexible!
 	def content: String
-	def createdBy: User
+	def createdBy: String
 	def createdAt: Date
 }
 
 trait HeadLine {
 	// Fixme: Content should be flexible!
 	def content: String
-	def createdBy: User
+	def createdBy: String
 	def createdAt: Date
 }
 
@@ -70,7 +68,7 @@ trait Library {
 trait Catalogue
 {
 	def query(predicate: Book => Boolean): List[Book]
-// Todo: Perhaps create generic cataloge taking a any object for query...
+// Todo: Perhaps create generic cataloge taking a any object for query..
 //	def query[Q](query: Q): Seq[Book] = { Nil }
 }
 

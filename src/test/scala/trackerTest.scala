@@ -11,7 +11,7 @@ import simple._
 
 class TrackerTest extends WordSpec with MustMatchers {
 
-	implicit val me = User("me")
+	val me = "me"
 	import SimpleFactory._
 	implicit val factory = SimpleFactory
 	
@@ -45,7 +45,7 @@ class TrackerTest extends WordSpec with MustMatchers {
 	
 	"A library" must {
 		val copier = Copier
-		implicit val me = User("me")
+		val me = "me"
 		
 		"accept a book" in {
 			val book = copier from EmptyBook by{ x => x }
@@ -56,7 +56,7 @@ class TrackerTest extends WordSpec with MustMatchers {
 		"accept two adjacent versions of the same book" in { 
 			val book = copier from EmptyBook by { x => x }
 			val library = Library(book :: Nil)
-			val newBook = copier from book by { _ write "Title" -> HeadLine("text", User("me"))}
+			val newBook = copier from book by { _ write "Title" -> HeadLine("text", me)}
 			library place newBook must be(Library(book :: newBook :: Nil))
 		}
 		"allow access to the exact same set of books after a modified library is created" in {
@@ -76,8 +76,8 @@ class TrackerTest extends WordSpec with MustMatchers {
 	"A catalog" must {
 		val copier = Copier
 		val library = Library(Nil)
+		val me = "me"
 		"allow to find a list of books by HeadLine" in { 
-			implicit val me = User("me")
 			val book1 = copier from EmptyBook by { _ write "Title" -> HeadLine("The Lord of the Rings", me) }
 			val book2 = copier from EmptyBook by { _ write "Title" -> HeadLine("The Hobbit", me) }
 			val book3 = copier from EmptyBook by { _ write "Title" -> HeadLine("Hitchiker's Guide", me) }
