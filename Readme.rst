@@ -35,6 +35,6 @@ copies of two books).
 Roadmap
 -------
 
-# Create API, inclusive tests to define the semantics
-# Add DB backend, current candidate is mongodb
-# Add a cmd line interface to create a usable application (perhaps introduce OSGi at some point)
+#. Create API, inclusive tests to define the semantics
+#. Add DB backend, current candidate is mongodb
+#. Add a cmd line interface to create a usable application (perhaps introduce OSGi at some point)
