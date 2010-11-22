@@ -11,76 +11,117 @@ object EmptyBook extends Book {
 
 
 trait Factory {
-	def newPage(content: String, user: String): Page
-	def newHeadLine(content: String, user: String): HeadLine
-	def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]): Book
-	def newLibrary(content: Seq[Book]): Library
+	def newPage(content: String, createdBy: String, createdAt: Date): P forSome { type P <: Page} 
+	def newHeadLine(content: String, createdBy: String, createdAt: Date): HL forSome {type HL <: HeadLine}
+	def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]): B forSome { type B <: Book}
+	def newLibrary(content: Seq[Book]): L forSome { type L <: Library}
 	def newCopier(): Copier
 }
 
 object Factory {
-	def Page(content: String, user: String)(implicit factory: Factory)  = factory.newPage(content, user)
-	def HeadLine(content: String, user: String)(implicit factory: Factory)  = factory.newHeadLine(content, user)
+	def Page(content: String, createdBy: String, createdAt: Date)(implicit factory: Factory)  = factory.newPage(content, createdBy, createdAt)
+	def HeadLine(content: String, createdBy: String, createdAt: Date)(implicit factory: Factory)  = factory.newHeadLine(content, createdBy, createdAt)
 	def Book(pages: Seq[Page], frontPage: Map[String, HeadLine])(implicit factory: Factory)  = factory.newBook(pages, frontPage)
 	def Library(content: Seq[Book])(implicit factory: Factory)  = factory.newLibrary(content)
 	def Copier(implicit factory: Factory) = factory.newCopier()
 }
 
-/*
+object DefaultFactory {
+	def Page(content: String, createdBy: String, createdAt: Date = new Date)(implicit factory: Factory)  = factory.newPage(content, createdBy, createdAt)
+	def HeadLine(content: String, createdBy: String, createdAt: Date = new Date)(implicit factory: Factory)  = factory.newHeadLine(content, createdBy, createdAt)
+	def Book(pages: Seq[Page], frontPage: Map[String, HeadLine])(implicit factory: Factory)  = factory.newBook(pages, frontPage)
+	def Library(content: Seq[Book])(implicit factory: Factory)  = factory.newLibrary(content)
+	def Copier(implicit factory: Factory) = factory.newCopier()
+}
+
 package mongodb {
+	
+	/*
+	1 collection of books
+	1 collection of libs (History, first entry is the current lib)
+	1 collection of book histories (is a split the same book?)
+	
+	val trackerId = new URL("mongo://<host>/<tracker-name>")
+	val trackerDb = trackerId.getHost
+	val trackerName = trackerId.getPath
+	val db = new Mongo(trackerDb).getDB(tracker)
+	val bookColl = db.getCollection("books")
+	val libColl = db.getCollection("libs")
+	val bookHistoryColl = db.getCollection("bookHist")
+	*/
+	
 	import com.mongodb._
 	import com.osinka.mongodb._
+	import com.osinka.mongodb.shape._
+	
+	/*
 	
 	object MongoFactory extends Factory {
-		def newPage(content: String, user: User) = new MongoPage(content, user)
-		def newHeadLine(content: String, user: User) = new MongoHeadLine(content, user)
-		def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]) = new MongoBook(pages.toList, frontPage)
+		def newPage(content: String, createdBy: String, createdAt: Date) = new MongoPage(content, createdBy, createdAt)
+		def newHeadLine(content: String, createdBy: String, createdAt: Date) = new MongoHeadLine(content, createdBy, createdAt)
+		def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]) = new MongoBook(pages, frontPage)
 		def newLibrary(content: Seq[Book]) = new MongoLibrary(content.toList)
 		def newCopier() = MongoCopier
 	}
+	*/
 	
-	class MongoPage(val content: String, user: User) extends Page with MongoObject
-	object MongoPage extends MongoObjectShape[MongoPage] {
-		lazy val content = Field.scalar("content", _.content)
-		lazy val user = Field.ref("createdBy", _.user)
-		val * = content :: user :: Nil
-		def factory(dbo: MongoObject) = 
+	/*
+	class MongoPage(val content: String, val createdBy: String, val createdAt: Date) extends Page with MongoObject
+	object MongoPage extends ObjectShape[MongoPage] with MongoPageIn[MongoPage] {
+		val * = content :: createdBy :: createdAt :: Nil
+		def factory(dbo: DBObject) = 
 			for{
-				content <- Option(dbo)
-				user <- Option(dbo)
+				content(c) <- Option(dbo)
+				createdBy(b) <- Option(dbo)
+				createdAt(a) <- Option(dbo)
 				}
-				yield new MongoPage(content, user)
+				yield new MongoPage(c, b, a)
+	}
+	trait MongoPageIn[T] extends ObjectIn[MongoPage, T] {
+		lazy val content = Field.scalar("content", _.content)
+		lazy val createdBy = Field.scalar("createdBy", _.createdBy)
+		lazy val createdAt = Field.scalar("createdAt", _.createdAt)
 	}
 	
-	class MongoHeadLine(val content: String, user: User) extends HeadLine with MongoObject
-	object MongoHeadLine extends MongoShape[MongoHeadLine] {
+	class MongoHeadLine(val content: String, val createdBy: String, val createdAt: Date) extends HeadLine with MongoObject
+	object MongoHeadLine extends MongoObjectShape[MongoHeadLine] {
 		lazy val content = Field.scalar("content", _.content)
-		lazy val user = Field.ref("createdBy", _.user)
-		val * = content :: user :: Nil
-		def factory(dbo: MongoObject) = 
+		lazy val createdBy = Field.scalar("createdBy", _.createdBy)
+		lazy val createdAt = Field.scalar("createdAt", _.createdAt)
+		val * = content :: createdBy :: createdAt :: Nil
+		def factory(dbo: DBObject) = 
 			for{
-				content <- Option(dbo)
-				user <- Option(dbo)
+				content(c) <- Option(dbo)
+				createdBy(b) <- Option(dbo)
+				createdAt(a) <- Option(dbo)
 				}
-				yield new MongoHeadLine(content, user)
+				yield new MongoHeadLine(c, b, a)
 	}
 	
-	class MongoBook(val pages: List[Page], val frontPage: Map[String, HeadLine]) extends Book with MongoObject
-	object MongoBook extends MongoShape[MongoBook] {
+	class MongoBook(val pages: Seq[MongoPage], val frontPage: Map[String, MongoHeadLine]) extends Book with MongoObject
+	object MongoBook extends MongoObjectShape[MongoBook] { shape => 
+		object pages extends MongoArray[MongoPage] with EmbeddedContent[MongoPage] with MongoPageIn[MongoBook] {
+			override val mongoFieldName = "pages"
+			override val rep = shape.Represented.by[Seq[MongoPage]](
+				_.pages,
+				None // No setter
+				)
+		}
 	}
 	
 	class MongoLibrary(val books: List[Book]) extends Library with MongoObject
 	
 	object MongoCopier extends Copier {
 		
-	}
+	}*/
 }
-*/
+
+
 package simple {
 	
 	object SimpleFactory extends Factory {
-		def newPage(content: String, user: String) = SimplePage(content, user)
-		def newHeadLine(content: String, user: String) = SimpleHeadLine(content, user)
+		def newPage(content: String, createdBy: String, createdAt: Date): SimplePage = SimplePage(content, createdBy, createdAt)
+		def newHeadLine(content: String, createdBy: String, createdAt: Date) = SimpleHeadLine(content, createdBy, createdAt)
 		def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]) = SimpleBook(pages.toList, frontPage)
 		def newLibrary(content: Seq[Book]) = SimpleLibrary(content.toList)
 		def newCopier() = new SimpleCopier()
