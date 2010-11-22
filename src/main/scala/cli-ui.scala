@@ -23,6 +23,12 @@ object TrackerCLI {
 		
 		val writePage = """write page (.*)""".r
 		val writeTitle = """write (.*?) = (.*)""".r
+		
+		val welcome = """Welcome to tracker.
+Written by Lukas Lädrach, Licensed under GPL v2"""
+		
+		println(welcome)
+		
 		for(command <- userInput)
 		{
 			command match {
@@ -42,7 +48,9 @@ object TrackerCLI {
 					for(book <- currentBook) 
 						currentBook = Some(Copier from book by { _ write Page(content, "me") })
 						
-				case writeTitle(key, content) => for(book <- currentBook) currentBook = Some(Copier from book by { _ write key -> HeadLine(content, "me") } )
+				case writeTitle(key, content) =>
+					for(book <- currentBook)
+						currentBook = Some(Copier from book by { _ write key -> HeadLine(content, "me") } )
 				
 				case x => println("Huh? How should i '%s'?" format x)
 			}
