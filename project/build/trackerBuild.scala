@@ -5,4 +5,6 @@ class TrackerBuild(info: ProjectInfo) extends DefaultProject(info) with growl.Gr
 	val scalatest = "org.scalatest" % "scalatest" % "1.2" % "test"
 	
 	val mongo = "com.osinka" % "mongo-scala-driver_2.8.0" % "0.8.2"
+	
+	val jline = "jline" % "jline" % "0.9.94"
 }

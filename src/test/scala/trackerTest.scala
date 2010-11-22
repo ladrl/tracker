@@ -4,7 +4,7 @@ import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 
 import scalatoys.tracker.impl.{simple => simple}
-import scalatoys.tracker.impl.Factory._
+import scalatoys.tracker.impl.DefaultFactory._
 import scalatoys.tracker.impl._
 import simple.SimpleFactory._
 import simple._

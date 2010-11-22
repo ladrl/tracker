@@ -157,7 +157,10 @@ package simple {
 	}
 	
 	case class SimpleCatalogue(val toQuery: SimpleLibrary) extends Catalogue {
-		def query(predicate: Book => Boolean): List[Book] = {
+		def query: Seq[Book] = {
+			toQuery books
+		}
+		def query(predicate: Book => Boolean): Seq[Book] = {
 			for(book <- toQuery.books if predicate(book))
 				yield book
 		}

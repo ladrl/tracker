@@ -67,7 +67,8 @@ trait Library {
 
 trait Catalogue
 {
-	def query(predicate: Book => Boolean): List[Book]
+	def query: Seq[Book]
+	def query(predicate: Book => Boolean): Seq[Book]
 // Todo: Perhaps create generic cataloge taking a any object for query..
 //	def query[Q](query: Q): Seq[Book] = { Nil }
 }
