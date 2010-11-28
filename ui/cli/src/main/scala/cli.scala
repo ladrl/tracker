@@ -12,6 +12,21 @@ object TrackerCLI {
 	import simple._
 	implicit val factory = SimpleFactory
 	
+	def print(book: Book) {
+		for((key, value) <- book.frontPage)
+			println("%s:\t%s" format(key, value.content))
+		println("----")
+		for(page <- book.pages)
+			println("By %s: %s" format(page.createdBy, page.content))
+	}
+	
+	def print(library: Library) {
+		println("-------")
+		println("Library")
+		println("-------")
+		for(book <- library.catalogue.query)
+			print(book)
+	}
 	
 	def main(args: Array[String]) = {
 		val reader = new ConsoleReader
@@ -32,11 +47,12 @@ Written by Lukas Lädrach, Licensed under GPL v2"""
 		for(command <- userInput)
 		{
 			command match {
-				case "books" =>
-					for(book <- currentLibrary.catalogue.query)
-						println(book)
+				case "books" => print(currentLibrary)
 						
-				case "current book" => println("Current book: %s" format currentBook)
+				case "current book" => currentBook match {
+					case Some(book) => print(book)
+					case None => println("No current book")
+				}
 				
 				case "new book" => currentBook = Some(Book(Nil, Map()))
 				

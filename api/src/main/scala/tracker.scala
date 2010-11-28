@@ -27,8 +27,10 @@ trait HeadLine {
 }
 
 trait Book {
-	def pages: List[Page]
-	def frontPage: Map[String, HeadLine]
+	type P <: Page
+	type HL <: HeadLine
+	def pages: Seq[P]
+	def frontPage: Map[String, HL]
 }
 
 
@@ -60,7 +62,7 @@ trait CopierCommand {
 
 trait Library {
 	def place(book: Book): Library
-	def replaceBook(replace: Book, by: Book): Library = removeBook(replace).place(by)
+	def replaceBook(replace: Book, by: Book) = removeBook(replace).place(by)
 	def removeBook(book: Book): Library
 	def catalogue: Catalogue
 }
@@ -72,6 +74,23 @@ trait Catalogue
 // Todo: Perhaps create generic cataloge taking a any object for query..
 //	def query[Q](query: Q): Seq[Book] = { Nil }
 }
+
+
+trait Factory {
+	def newPage(content: String, createdBy: String, createdAt: Date): Page 
+	def newHeadLine(content: String, createdBy: String, createdAt: Date): HeadLine
+	def newBook(pages: Seq[Page], frontPage: Map[String, HeadLine]): Book
+	def newLibrary(content: Seq[Book]): Library
+	def newCopier(): Copier
+}
+
+object EmptyBook extends Book {
+	type P = Page
+	type HL = HeadLine
+	override val pages = Nil
+	override val frontPage = Map[String, HL]()
+}
+
 
 // Immutable Library, Book & Page
 // Kopiermaschine à la Tim & Struppi

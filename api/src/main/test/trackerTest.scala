@@ -77,7 +77,7 @@ class TrackerTest extends WordSpec with MustMatchers {
 		val copier = Copier
 		val library = Library(Nil)
 		val me = "me"
-		"allow to find a list of books by HeadLine" in { 
+		"allow to find a list of books by content HeadLine" in { 
 			val book1 = copier from EmptyBook by { _ write "Title" -> HeadLine("The Lord of the Rings", me) }
 			val book2 = copier from EmptyBook by { _ write "Title" -> HeadLine("The Hobbit", me) }
 			val book3 = copier from EmptyBook by { _ write "Title" -> HeadLine("Hitchiker's Guide", me) }
@@ -87,7 +87,7 @@ class TrackerTest extends WordSpec with MustMatchers {
 					b => (for(hl <- b.frontPage.get("Title") if hl.toString.contains("The")) yield true) getOrElse false
 				}) must be (book1 :: book2 :: Nil)
 		}
-		"allow to find a list of books by Page" in {
+		"allow to find a list of books by content of Page" in {
 			
 			(pending)
 		}
