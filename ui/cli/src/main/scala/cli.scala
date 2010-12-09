@@ -4,20 +4,20 @@ import scalatoys.tracker._
 import scalatoys.richjline._
 import jline.ConsoleReader
 
-import scalatoys.tracker.impl.{simple => simple}
-import scalatoys.tracker.impl.DefaultFactory._
-import scalatoys.tracker.impl._
+import scalatoys.tracker.impl.simple.Simple
 
 object TrackerCLI {
-	import simple._
-	implicit val factory = SimpleFactory
+	val scope = new Simple
+	import scope._
 	
 	def print(book: Book) {
-		for((key, value) <- book.frontPage)
-			println("%s:\t%s" format(key, value.content))
+		val frontPage = for((key, value) <- book.frontPage) 
+			yield "%s:\t%s" format(key, value.content)
+		println(frontPage.foldRight("") { _ + "\n" + _ })
 		println("----")
-		for(page <- book.pages)
-			println("By %s: %s" format(page.createdBy, page.content))
+		val pages = for(page <- book.pages)
+			yield "By %s: %s" format(page.createdBy, page.content)
+		println(pages.foldRight ("") { _ + "\n" + _ })
 	}
 	
 	def print(library: Library) {
@@ -54,19 +54,20 @@ Written by Lukas Lädrach, Licensed under GPL v2"""
 					case None => println("No current book")
 				}
 				
-				case "new book" => currentBook = Some(Book(Nil, Map()))
+				case "new book" => currentBook = Some(EmptyBook)
 				
-				case "place" =>
-					for(book <- currentBook) 
-						currentLibrary = currentLibrary place book
+				case "place" => currentLibrary = currentBook match {
+					case Some(book) => currentLibrary place book
+					case None => currentLibrary
+				} 
 				
-				case writePage(content) => 
-					for(book <- currentBook) 
-						currentBook = Some(Copier from book by { _ write Page(content, "me") })
+				case writePage(content) => currentBook = for(book <- currentBook) yield Copier from book by { _ write Page(content, "me", new java.util.Date) }
 						
 				case writeTitle(key, content) =>
 					for(book <- currentBook)
-						currentBook = Some(Copier from book by { _ write key -> HeadLine(content, "me") } )
+						currentBook = Some(Copier from book by { _ write key -> HeadLine(content, "me", new java.util.Date) } )
+				
+				case "quit" =>
 				
 				case x => println("Huh? How should i '%s'?" format x)
 			}

@@ -54,9 +54,9 @@ abstract class Tracker {
 	
 		// Metaphor: To do this, you put a book on the copier, then instruct the copier to add a page and to add a line, then press 'copy' which creates the new book
 		// copier from book write page write page2 write "Title" -> "Mein Tagebuch" asNewBook
-		def write(pages: List[Page]): Command
+		def write(pages: Seq[Page]): Command
 		def write(lines: Map[String, HeadLine]): Command
-		def erase(lines: List[String]): Command
+		def erase(lines: Seq[String]): Command
 	
 		def write(line: (String, HeadLine)): Command = write(Map( line._1 -> line._2))
 		def write(page: Page): Command = write(List(page))

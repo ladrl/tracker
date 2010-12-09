@@ -20,28 +20,27 @@ import scalatoys.tracker.Tracker
 	
 		case class SimpleCommand(
 			book: SimpleBook, 
-			additionalPages: List[SimplePage] = Nil, 
+			additionalPages: Seq[SimplePage] = Nil, 
 			additionalHeadlines: Map[String, SimpleHeadLine] = Map(), 
-			subtractionalHeadlines: List[String] = Nil
+			subtractionalHeadlines: Seq[String] = Nil
 		) extends A_Command {
-			def write(pages: List[SimplePage]): SimpleCommand    = copy(additionalPages = additionalPages ++ pages)
+			def write(pages: Seq[SimplePage]): SimpleCommand = copy(additionalPages = additionalPages ++ pages)
 			def write(lines: Map[String, SimpleHeadLine]): SimpleCommand = copy(additionalHeadlines =  additionalHeadlines ++ lines)
-			def erase(lines: List[String]): SimpleCommand          = copy(subtractionalHeadlines = subtractionalHeadlines ++ lines)
+			def erase(lines: Seq[String]): SimpleCommand          = copy(subtractionalHeadlines = subtractionalHeadlines ++ lines)
 			def asNewBook: SimpleBook = SimpleBook(
-				book.pages ++ additionalPages,
-				(book.frontPage ++ additionalHeadlines).filterKeys { !subtractionalHeadlines.contains(_) }
+					book.pages ++ additionalPages,
+					(book.frontPage ++ additionalHeadlines).filterKeys { !subtractionalHeadlines.contains(_) }
 				)
 		}
 
- 	
-		case class SimpleBook(val pages: Seq[SimplePage], val frontPage: Map[String, SimpleHeadLine]) extends A_Book
+		case class SimpleBook(val pages: Seq[SimplePage], val frontPage: Map[String, SimpleHeadLine]) extends A_Book 
 
 		case class SimpleHeadLine(val content: String, val createdBy: String, val createdAt: Date = new java.util.Date) extends A_HeadLine
 
 		case class SimplePage(val content: String, val createdBy: String,  val createdAt: Date = new java.util.Date) extends A_Page
 
-		class SimpleCopier(val book: SimpleBook = EmptyBook, val command: SimpleCommand = SimpleCommand(EmptyBook)) extends A_Copier {
-			def from(template: SimpleBook) =  new SimpleCopier(template, command)
+		class SimpleCopier(val command: SimpleCommand = SimpleCommand(EmptyBook)) extends A_Copier {
+			def from(template: SimpleBook) =  new SimpleCopier(new SimpleCommand(template))
 		}
 
 		case class SimpleCatalogue(val toQuery: SimpleLibrary) extends A_Catalogue {
@@ -53,7 +52,6 @@ import scalatoys.tracker.Tracker
 					yield book
 			}
 		}
-
 
 		case class SimpleLibrary(val books: List[SimpleBook]) extends A_Library {
 			def place(book: SimpleBook) = new SimpleLibrary(books :+ book)
