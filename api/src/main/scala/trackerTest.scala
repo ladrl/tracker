@@ -26,9 +26,19 @@ trait TrackerTest extends WordSpec with MustMatchers {
 				copier.by({ x => x }) must be (Book(Nil, Map()))
 			}
 		
-			"put a page in a book it" in {
+			"put a page in a book" in {
 				val page = Page("text", me, new java.util.Date)
 				copier.by { _ write page } must be (Book(page :: Nil, Map()))
+			}
+			
+			"put two pages in a book" in {
+				val page1 = Page("text1", me, new java.util.Date)
+				val page2 = Page("text2", me, new java.util.Date)
+				val book1 = copier from EmptyBook by { _ write page1 }
+				val book2 = copier from book1 by { _ write page2 }
+				book1 must be (Book(page1 :: Nil, Map()))
+				book2 must be (Book(page1 :: page2 :: Nil, Map()))
+				
 			}
 			
 			"put a headline on a book" in {
