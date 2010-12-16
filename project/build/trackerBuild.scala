@@ -13,7 +13,7 @@ class TrackerBuild(info: ProjectInfo) extends ParentProject(info) {
 	class Implementations(info: ProjectInfo) extends ParentProject(info) {
 		val stub = project("stub", "stub", api)
 
-		//val mongodb = project("mongodb", "mongodb", new MongoDB(_))
+		val mongodb = project("mongodb", "mongodb", new MongoDB(_), api)
 		class MongoDB(info: ProjectInfo) extends DefaultProject(info) {
 			val mongo = "com.osinka" % "mongo-scala-driver_2.8.0" % "0.8.2" % "compile"
 		}

@@ -8,6 +8,7 @@ trait TrackerTest extends WordSpec with MustMatchers {
 	val scope: Tracker
 	
 	val me = "me"
+	val libName = "testLib"
 	def test = {
 		import scope._ // IMPORTANT: scope _must_ be 'val' so it can serve as 'stable type'
 		"The tracker" must {
@@ -63,22 +64,23 @@ trait TrackerTest extends WordSpec with MustMatchers {
 		
 			"accept a book" in {
 				val book = copier from EmptyBook by{ x => x }
-				val library = Library(Nil)
+				val library = Library(libName, Nil)
 				val newLibrary = library.place(book)
-				newLibrary must be (Library(book :: Nil))
+				newLibrary.catalogue.query must be (book :: Nil)
 			}
 			"accept two adjacent versions of the same book" in { 
 				val book = copier from EmptyBook by { x => x }
-				val library = Library(book :: Nil)
+				val library = Library(libName, book :: Nil)
 				val newBook = copier from book by { _ write "Title" -> HeadLine("text", me, new java.util.Date)}
-				library place newBook must be(Library(book :: newBook :: Nil))
+				val newLibrary = library place newBook 
+				newLibrary.catalogue.query must be (book :: newBook :: Nil)
 			}
 			"allow access to the exact same set of books after a modified library is created" in {
 				// - create a book, put it into a lib 
 				// - modify the book (perhaps destructive) and create a new lib with it
 				// - check the old version of the lib if the initial book is still in it
 				val book = copier from EmptyBook by { _ write "Title" -> HeadLine("Book 1", me, new java.util.Date) }
-				val initialLibrary = Library(Nil)
+				val initialLibrary = Library(libName)
 				val library = initialLibrary place book
 				val secondBook = copier from EmptyBook by { _ write "Title" -> HeadLine("Book 2", me, new java.util.Date)}
 				val newLibrary = library place secondBook
@@ -89,7 +91,7 @@ trait TrackerTest extends WordSpec with MustMatchers {
 
 		"A catalog" must {
 			val copier = Copier
-			val library = Library(Nil)
+			val library = Library(libName, Nil)
 			val me = "me"
 			"allow to find a list of books by content HeadLine" in { 
 				val book1 = copier from EmptyBook by { _ write "Title" -> HeadLine("The Lord of the Rings", me, new java.util.Date) }

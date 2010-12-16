@@ -43,6 +43,7 @@ abstract class Tracker {
 	}
 
 	trait A_Library {
+		val name: String
 		def place(book: Book): Library
 		def replaceBook(replace: Book, by: Book) = removeBook(replace).place(by)
 		def removeBook(book: Book): Library
@@ -75,7 +76,8 @@ abstract class Tracker {
 	def Page(content: String, createdBy: String, createdAt: Date): Page 
 	def HeadLine(content: String, createdBy: String, createdAt: Date): HeadLine
 	def Book(pages: Seq[Page], frontPage: Map[String, HeadLine]): Book
-	def Library(content: Seq[Book]): Library
+	def Library(name: String, content: Seq[Book]): Library
+	def Library(name: String): Library
 	def Copier(): Copier
 	def EmptyBook: Book
 }
