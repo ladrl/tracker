@@ -77,7 +77,7 @@ abstract class Tracker {
 	def HeadLine(content: String, createdBy: String, createdAt: Date): HeadLine
 	def Book(pages: Seq[Page], frontPage: Map[String, HeadLine]): Book
 	def Library(name: String, content: Seq[Book]): Library
-	def Library(name: String): Library
+	def Library(name: String): Option[Library]
 	def Copier(): Copier
 	def EmptyBook: Book
 }

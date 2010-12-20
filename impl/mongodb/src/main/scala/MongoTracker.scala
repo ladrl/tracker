@@ -33,10 +33,10 @@ class MongoTracker(val host: String, val trackerName: String) extends api.Tracke
 	def Library(name: String, content: Seq[MongoBook]) = new MongoLibrary(name, content.toList)
 	def Library(name: String) = {
 		val query = MongoLibrary where { MongoLibrary.name is name} //sortBy MongoLibrary.seqNo ascending
-		(query in libColl take 1).headOption getOrElse error("Unable to find library '%s'" format name)
+		(query in libColl take 1).headOption
 	}
 	def Copier() = new MongoCopier(new MongoCommand(EmptyBook, Nil, Map(), Nil))
-	val EmptyBook = new MongoBook(Nil, Map[String, MongoHeadLine]())
+	val EmptyBook = new MongoBook(Nil, Nil)
 
 	case class MongoPage(val content: String, val createdBy: String, val createdAt: Date) extends A_Page with MongoObject
 
@@ -75,6 +75,7 @@ class MongoTracker(val host: String, val trackerName: String) extends api.Tracke
 	object MongoHeadLine extends ObjectShape[MongoHeadLine] with MongoHeadLineIn[MongoHeadLine]
 
 	case class MongoBook(val pages: Seq[MongoPage], val frontPage: Map[String, MongoHeadLine]) extends A_Book with MongoObject
+	}
 
 	object MongoBook extends MongoObjectShape[MongoBook] { 
 		val shape = this
@@ -83,25 +84,25 @@ class MongoTracker(val host: String, val trackerName: String) extends api.Tracke
 			override val mongoFieldName = "pages"
 			override val rep = shape.Represented.by[Seq[MongoPage]](_.pages,None) // No setter
 		}
-//		val frontPage = Field.scalar("frontPage", _.frontPage)
-		val * = pages /*:: frontPage*/ :: Nil
+		val frontPage = Field.scalar("frontPage", _.frontPage)
+		val * = pages :: frontPage :: Nil
 		def factory(dbo: DBObject) = 
 			for{
 				pages(p) <- Option(dbo)
-//				frontPage(fp) <- Option(dbo)
+				frontPage(fp) <- Option(dbo)
 			}
-				yield new MongoBook(p, Map())
+				yield new MongoBook(p, fp)
 	}
 
 	case class MongoLibrary(val name: String, val books: Seq[MongoBook], val seqNo: Long = 0) extends A_Library with MongoObject {
 		def place(book: MongoBook) = {
-			val newLib = copy(books = books :+ book, seqNo = seqNo + 1)
+			val newLib = new MongoLibrary(name, books :+ book, seqNo + 1)
 			libColl += newLib
 			newLib
 		}
 		def removeBook(book: MongoBook) = {
 			if(books.find(_ == book) == None) error("Unable to find book %s" format book)
-			val newLib = copy(books = books filter { _ != book }, seqNo = seqNo + 1)
+			val newLib = new MongoLibrary(name, books filter { _ != book }, seqNo + 1)
 			libColl += newLib
 			newLib
 		}

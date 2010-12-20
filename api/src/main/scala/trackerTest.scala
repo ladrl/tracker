@@ -80,7 +80,7 @@ trait TrackerTest extends WordSpec with MustMatchers {
 				// - modify the book (perhaps destructive) and create a new lib with it
 				// - check the old version of the lib if the initial book is still in it
 				val book = copier from EmptyBook by { _ write "Title" -> HeadLine("Book 1", me, new java.util.Date) }
-				val initialLibrary = Library(libName)
+				val initialLibrary = Library(libName, Nil)
 				val library = initialLibrary place book
 				val secondBook = copier from EmptyBook by { _ write "Title" -> HeadLine("Book 2", me, new java.util.Date)}
 				val newLibrary = library place secondBook
