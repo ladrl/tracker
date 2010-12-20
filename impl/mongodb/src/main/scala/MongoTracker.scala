@@ -36,7 +36,7 @@ class MongoTracker(val host: String, val trackerName: String) extends api.Tracke
 		(query in libColl take 1).headOption
 	}
 	def Copier() = new MongoCopier(new MongoCommand(EmptyBook, Nil, Map(), Nil))
-	val EmptyBook = new MongoBook(Nil, Nil)
+	val EmptyBook = new MongoBook(Nil, Map())
 
 	case class MongoPage(val content: String, val createdBy: String, val createdAt: Date) extends A_Page with MongoObject
 
@@ -75,16 +75,19 @@ class MongoTracker(val host: String, val trackerName: String) extends api.Tracke
 	object MongoHeadLine extends ObjectShape[MongoHeadLine] with MongoHeadLineIn[MongoHeadLine]
 
 	case class MongoBook(val pages: Seq[MongoPage], val frontPage: Map[String, MongoHeadLine]) extends A_Book with MongoObject
-	}
 
 	object MongoBook extends MongoObjectShape[MongoBook] { 
 		val shape = this
 		
 		object pages extends MongoArray[MongoPage] with ArrayFieldModifyOp[MongoPage] with EmbeddedContent[MongoPage] with MongoPageIn[MongoBook] {
 			override val mongoFieldName = "pages"
-			override val rep = shape.Represented.by[Seq[MongoPage]](_.pages,None) // No setter
+			override val rep = shape.Represented.by[Seq[MongoPage]](_.pages, None) // No setter
 		}
-		val frontPage = Field.scalar("frontPage", _.frontPage)
+		object frontPage extends MongoMap[MongoHeadLine] with EmbeddedContent[MongoHeadLine] with MongoHeadLineIn[MongoBook] {
+			override val mongoFieldName = "frontPageKey"
+			override val rep = shape.Represented.by[Map[String, MongoHeadLine]](_.frontPage, None)
+		}
+
 		val * = pages :: frontPage :: Nil
 		def factory(dbo: DBObject) = 
 			for{
