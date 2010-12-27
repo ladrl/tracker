@@ -111,7 +111,13 @@ trait TrackerTest extends WordSpec with MustMatchers {
 				(pending)
 			}
 			"allow to find the list of a book and it`s predecessors" in {
-				(pending)
+				val book1 = copier from EmptyBook by { _ write "Title" -> HeadLine("The Lord of the Rings", me, new java.util.Date) }
+				val book2 = copier from book1 by { _ write Page("Meadows, Hobbits & Dragons", me, new java.util.Date) }
+				val book3 = copier from book2 by { _ write Page("Ring & Fights", me, new java.util.Date) }
+				val filledLibrary = library place book1 place book2 place book3
+				val catalogue = filledLibrary.catalogue
+				
+				catalogue.predecessors(book3) must be (book2 :: book1 :: Nil)
 			}
 		}
 	}

@@ -70,6 +70,7 @@ abstract class Tracker {
 	{
 		def query: Seq[Book]
 		def query(predicate: Book => Boolean): Seq[Book]
+		def predecessors(of: Book) : Seq[Book]
 	}
 
 

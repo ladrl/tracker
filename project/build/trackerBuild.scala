@@ -16,7 +16,8 @@ class TrackerBuild(info: ProjectInfo) extends ParentProject(info) {
 
 		val mongodb = project("mongodb", "mongodb", new MongoDB(_), api)
 		class MongoDB(info: ProjectInfo) extends DefaultProject(info) {
-			val mongo = "com.osinka" % "mongo-scala-driver_2.8.0" % "0.8.2" % "compile"
+			val mavenLocal = "Local Maven Repository" at  "file://"+Path.userHome+"/.m2/repository"
+			val mongo = "com.osinka" % "mongo-scala-driver" % "0.8.9-SNAPSHOT" % "compile"
 		}
 	}
 	
