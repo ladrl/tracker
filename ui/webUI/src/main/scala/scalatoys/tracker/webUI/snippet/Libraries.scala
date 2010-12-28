@@ -4,6 +4,9 @@ import net.liftweb.util.Props
 import scalatoys.tracker._
 import scalatoys.tracker.impl.mongodb._
 
+import net.liftweb.common._
+import net.liftweb.common.Box._
+
 class Libraries {
 
   import com.mongodb._
@@ -19,15 +22,13 @@ class Libraries {
 	val libName = "webLib"
 
 
-
   def listBooks = <span> {
-    val library = Library(libName)
-    val books = library.get.catalogue.query
-
-    books.map{b =>
+    val library = Library(libName) ?~! "Library %s not found".format(libName)
+    library.map{_.catalogue.query.map{b =>
       <br/> + "Pages: " + b.pages + " FrontPage: " + b.frontPage
 
-    }.reduceRight(_ + <br/> + _ )
+    }.reduceRight(_ + <br/> + _ )}
+
   }  </span>
 }
 
