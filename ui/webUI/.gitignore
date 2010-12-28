@@ -1,0 +1,12 @@
+lib_managed
+lift_proto.db.*
+*.jar
+target
+project
+.DS_Store
+.idea/
+liftyTest.iml
+pca_example.h2.db
+tags
+*.iml
+database/*

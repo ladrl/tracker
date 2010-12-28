@@ -16,7 +16,8 @@ class TrackerBuild(info: ProjectInfo) extends ParentProject(info) {
 
 		val mongodb = project("mongodb", "mongodb", new MongoDB(_), api)
 		class MongoDB(info: ProjectInfo) extends DefaultProject(info) {
-			val mongo = "com.osinka" % "mongo-scala-driver_2.8.0" % "0.8.2" % "compile"
+		  val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
+			val mongo = "com.osinka" % "mongo-scala-driver" % "0.8.9-SNAPSHOT" % "compile"
 		}
 	}
 	
@@ -25,12 +26,34 @@ class TrackerBuild(info: ProjectInfo) extends ParentProject(info) {
 		class CLI(info: ProjectInfo) extends DefaultProject(info) {
 			val jline = "jline" % "jline" % "0.9.94" % "compile"
 		}
+		val webUI = project("webUI", "webUI", new WebUI(_), api)
+		import fi.jawsy.sbtplugins.jrebel.JRebelWebPlugin
+		class WebUI(info: ProjectInfo) extends DefaultWebProject(info) with JRebelWebPlugin {
+
+       val scalatoolsSnapshot = "Scala Tools Snapshot" at
+      "http://scala-tools.org/repo-snapshots/"
+
+      val scalatoolsRelease = "Scala Tools Snapshot" at
+      "http://scala-tools.org/repo-releases/"
+
+      val liftVersion = "2.2-RC4"
+
+      val webkit = "net.liftweb" %% "lift-webkit" % liftVersion % "compile->default"
+      val mapper = "net.liftweb" %% "lift-mapper" % liftVersion % "compile->default"
+      val h2 = "com.h2database" % "h2" % "1.2.138"
+      val jettyyy = "org.mortbay.jetty" % "jetty" % "6.1.22" % "test->default"
+      val junit = "junit" % "junit" % "4.5" % "test->default"
+      val logback = "ch.qos.logback" % "logback-classic" % "0.9.26"
+      val specs = "org.scala-tools.testing" %% "specs" % "1.6.6" % "test->default"
+    }
 	}
 	
 	class Applications(info: ProjectInfo) extends ParentProject(info) {
 		val mongocli = project("mongocli", "mongocli", ui.cli, impl.mongodb)
-		
+		val mongoWeb = project("mongoWeb", "mongoweb", ui.webUI, impl.mongodb)
 	}
+	
+
 	
 //	override def fork = forkRun
 }

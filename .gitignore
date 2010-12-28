@@ -5,3 +5,4 @@ target/
 *.lock
 *~
 *.log
+.DS_Store
