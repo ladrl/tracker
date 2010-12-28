@@ -26,7 +26,7 @@ class TrackerBuild(info: ProjectInfo) extends ParentProject(info) {
 		class CLI(info: ProjectInfo) extends DefaultProject(info) {
 			val jline = "jline" % "jline" % "0.9.94" % "compile"
 		}
-		val webUI = project("webUI", "webUI", new WebUI(_), api)
+		val webUI = project("webUI", "webUI", new WebUI(_), api, impl.mongodb)
 		import fi.jawsy.sbtplugins.jrebel.JRebelWebPlugin
 		class WebUI(info: ProjectInfo) extends DefaultWebProject(info) with JRebelWebPlugin {
 
@@ -45,12 +45,14 @@ class TrackerBuild(info: ProjectInfo) extends ParentProject(info) {
       val junit = "junit" % "junit" % "4.5" % "test->default"
       val logback = "ch.qos.logback" % "logback-classic" % "0.9.26"
       val specs = "org.scala-tools.testing" %% "specs" % "1.6.6" % "test->default"
+
+      val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
+      val mongo = "com.osinka" % "mongo-scala-driver" % "0.8.9-SNAPSHOT" % "compile"
     }
 	}
 	
 	class Applications(info: ProjectInfo) extends ParentProject(info) {
 		val mongocli = project("mongocli", "mongocli", ui.cli, impl.mongodb)
-		val mongoWeb = project("mongoWeb", "mongoweb", ui.webUI, impl.mongodb)
 	}
 	
 

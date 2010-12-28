@@ -32,7 +32,7 @@ class MongoTracker(val host: String, val trackerName: String) extends api.Tracke
 	def Book(pages: Seq[MongoPage], frontPage: Map[String, MongoHeadLine]) = new MongoBook(pages, frontPage)
 	def Library(name: String, content: Seq[MongoBook]) = new MongoLibrary(name, content.toList)
 	def Library(name: String) = {
-		val query = MongoLibrary where { MongoLibrary.name is name} //sortBy MongoLibrary.seqNo ascending
+		val query = MongoLibrary where { MongoLibrary.name is name} sortBy(MongoLibrary.seqNo).descending
 		(query in libColl take 1).headOption
 	}
 	def Copier() = new MongoCopier(new MongoCommand(EmptyBook, Nil, Map(), Nil))

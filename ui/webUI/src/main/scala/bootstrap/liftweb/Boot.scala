@@ -15,7 +15,7 @@ import example.travel.model.{Auction,Supplier,Customer,Bid,Order,OrderAuction}
                                                 
 class Boot extends Loggable {
   def boot {
-    LiftRules.addToPackages("example.travel")
+    LiftRules.addToPackages("scalatoys.tracker.webUI")
 
     /**** database settings ****/
     
