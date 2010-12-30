@@ -35,9 +35,6 @@ class Libraries {
   def showBooks(library: Library, xhtml: NodeSeq) = library.catalogue.query.flatMap { showBook(_, xhtml) }
 
   def showBook(book: Book, xhtml: NodeSeq): NodeSeq = {
-	bind("book", xhtml, 
-		"frontPage" -> showFrontPage(book) _,
-		"pages" -> showPages(book.pages) _  ).toSeq
 
     def showPages(pages: Seq[Page])(xhtml: NodeSeq): NodeSeq = pages.flatMap{ p => showPage(p)(xhtml) }
 
@@ -52,6 +49,11 @@ class Libraries {
     def showHeadLine(key: String, hl: HeadLine)(xhtml: NodeSeq) = {
       bind("page", xhtml, "key" -> key, "value" -> hl.content)
     }
+
+    bind("book", xhtml,
+		  "frontPage" -> showFrontPage(book) _,
+		  "pages" -> showPages(book.pages) _  )
+
   }
 }
 
