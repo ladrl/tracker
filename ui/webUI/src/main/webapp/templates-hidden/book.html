@@ -1,0 +1,18 @@
+<lift:libraries.listBooks eager_eval="true">
+	<div style="border: 3px black solid;">
+		<h2>FrontPage</h2>
+		<book:frontPage>
+			<p>
+				<b><page:key/></b>: <page:value/>
+			</p>
+		</book:frontPage>
+		<h2>Pages</h2>
+		<ul>
+			<book:pages>
+				<p>
+					<page:page/>
+				</p>
+			</book:pages>
+		</ul>
+	</div>
+</lift:libraries.listBooks>
