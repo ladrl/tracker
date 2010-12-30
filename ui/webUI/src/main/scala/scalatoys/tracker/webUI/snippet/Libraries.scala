@@ -45,9 +45,7 @@ class Libraries {
   }
 
   def showFrontPage(book: Book)(xhtml: NodeSeq): NodeSeq = {
-    val res = book.frontPage.flatMap{ t => showHeadLine(t._1, t._2)(xhtml) }.toList
-
-	res
+	book.frontPage.toList.flatMap{ t => showHeadLine(t._1, t._2)(xhtml) }
   }
 
   def showHeadLine(key: String, hl: HeadLine)(xhtml: NodeSeq) = {

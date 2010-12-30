@@ -73,16 +73,8 @@ object Application {
   val MustBeLoggedIn = Customer.loginFirst
   
   val sitemap = List(
-    Menu("Home") / "index" >> LocGroup("public"),
-    Menu("Auctions") / "auctions" >> LocGroup("public"),
-    Menu("Search") / "search" >> LocGroup("public") >> MustBeLoggedIn,
-    Menu("History") / "history" >> LocGroup("public") >> MustBeLoggedIn,
-    Menu("Auction Detail") / "auction" >> LocGroup("public") >> Hidden,
-    // admin
-    Menu("Admin") / "admin" / "index" >> LocGroup("admin"),
-    Menu("Suppliers") / "admin" / "suppliers" >> LocGroup("admin") submenus(Supplier.menus : _*),
-    Menu("Auction Admin") / "admin" / "auctions" >> LocGroup("admin") submenus(Auction.menus : _*)
-  ) ::: Customer.menus
+    Menu("Home") / "index" >> LocGroup("public")
+  ) //::: Customer.menus
   
   val database = DBVendor
   
