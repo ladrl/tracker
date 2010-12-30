@@ -37,19 +37,21 @@ class Libraries {
   def showBook(book: Book, xhtml: NodeSeq): NodeSeq = {
 	bind("book", xhtml, 
 		"frontPage" -> showFrontPage(book) _,
-		"pages" -> book.pages.flatMap { p =>
-			println(chooseTemplate("book", "pages", xhtml))
-			bind("page", chooseTemplate("book", "pages", xhtml), "page" -> p.content)
-		}.toSeq
-	)
-  }
+		"pages" -> showPages(book.pages) _  ).toSeq
 
-  def showFrontPage(book: Book)(xhtml: NodeSeq): NodeSeq = {
-	book.frontPage.toList.flatMap{ t => showHeadLine(t._1, t._2)(xhtml) }
-  }
+    def showPages(pages: Seq[Page])(xhtml: NodeSeq): NodeSeq = pages.flatMap{ p => showPage(p)(xhtml) }
 
-  def showHeadLine(key: String, hl: HeadLine)(xhtml: NodeSeq) = {
-    bind("page", xhtml, "key" -> key, "value" -> hl.content)
+    def showPage(page: Page)(xhtml: NodeSeq): NodeSeq = bind("page", xhtml, "page" -> page.content)
+
+    def showFrontPage(book: Book)(xhtml: NodeSeq): NodeSeq = {
+      book.frontPage.toList.flatMap{
+        t => showHeadLine(t._1, t._2)(xhtml)
+      }
+    }
+
+    def showHeadLine(key: String, hl: HeadLine)(xhtml: NodeSeq) = {
+      bind("page", xhtml, "key" -> key, "value" -> hl.content)
+    }
   }
 }
 
